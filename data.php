@@ -2,7 +2,7 @@
 try {
 	$account_email = ''; // Login data.grandlyon.com (e-mail address)
 	$account_pwd = ''; // Password data.grandlyon.com
-	$url = "https://data.grandlyon.com/fr/datapusher/ws/rdata/tcl_sytral.tclparcrelaistr/all.json";
+	$url = "https://data.grandlyon.com/geoserver/sytral/ows?SERVICE=WFS&VERSION=2.0.0&request=GetFeature&typename=sytral:tcl_sytral.tclparcrelaistr&SRSNAME=EPSG:4326&outputFormat=application/json";
 	
 	$curlOpts = array(
         CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,

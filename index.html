@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" integrity="sha384-7qAoOXltbVP82dhxHAUje59V5r2YsVfBafyUDxEdApLPmcdhBPg1DKg1ERo0BZlK" crossorigin="anonymous"></script>
 <script>
   navigator.serviceWorker && navigator.serviceWorker.register('service-worker.js').then(function(registration) {  
     console.log('Service worker enregistré.')
@@ -32,11 +32,11 @@
                  placeholder="Filtrer les éléments" />
         </div>
       </div>
-      <button v-show="!this.isSearchFocused" class="btn btn-link" @click="this.toggleMode()">
-        <i class="bi" :class="{'bi-gear': (this.mode === 'home'), 'bi-gear-fill': (this.mode === 'settings')}"></i>
-      </button>
       <button v-show="!this.isSearchFocused && this.mode === 'home'" class="btn btn-link" @click="this.fetchData()">
         <i class="bi bi-arrow-clockwise"></i>
+      </button>
+      <button v-show="!this.isSearchFocused" class="btn btn-link" @click="this.toggleMode()">
+        <i class="bi" :class="{'bi-gear': (this.mode === 'home'), 'bi-gear-fill': (this.mode === 'settings')}"></i>
       </button>
     </div>
     <div v-if="!this.displayedItems?.length" class="mx-3">
@@ -75,8 +75,13 @@
           </div>
         </div>
         <div v-show="this.mode === 'settings' || park.showDetails" class="row mt-2">
-          <div class="col fw-light" style="font-size: 0.8rem;">
-            {{park.horaires}}
+          <div class="col fw-light">
+            <div style="font-size: 0.8rem;">{{park.horaires}}</div>
+            <div v-if="park.showDetails" class="mt-2 text-end">
+              <button class="btn btn-link p-0 text-decoration-none" style="font-size: 0.8rem;" @click="this.directionsTo(park.coordinates)">
+                <i class="bi bi-sign-turn-slight-right-fill"></i> Calculer un itinéraire
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -120,9 +125,15 @@
         fetch('./data').then((response) => {
           if(response.ok) {
             response.json().then(data => {
-              this.parkList = data.values.map(park => {
-                park.nom = park.nom.replace('Parc Relais TCL ', '');
-                return park;
+              this.parkList = data.features.map(park => {
+                return {
+                  id: park.properties.id,
+                  nom: park.properties.nom.replace('Parc Relais TCL ', ''),
+                  horaires: park.properties.horaires,
+                  capacite: park.properties.capacite,
+                  nb_tot_place_dispo: park.properties.nb_tot_place_dispo,
+                  coordinates: park.geometry.coordinates[0],
+                };
               }).sort((a, b) => a.nom.localeCompare(b.nom));
               this.loadingData = false;
             });
@@ -139,8 +150,8 @@
           this.mode = 'settings';
         } else {
           this.mode = 'home';
-          this.parkList.forEach(park => park.showDetails = false);
         }
+        this.parkList.forEach(park => park.showDetails = false);
         this.searchedValue = '';
       },
       focusSearch(state) {
@@ -161,6 +172,9 @@
         }
         localStorage.setItem('favorites', JSON.stringify(savedFav));
         this.savedFavorites = savedFav;
+      },
+      directionsTo(coordinates) {
+        window.location.href = 'https://www.google.com/maps/dir/?api=1&destination=' + coordinates[1] + '%2c' + coordinates[0];
       }
     }
   }).mount('#app')
